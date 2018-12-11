@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.MathContext;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -325,7 +326,9 @@ public class CreateConfig {
 		Row row;
 		Cell text;
 		int LastIndexTables = 248;   //максимальный размер таблицы в STS
-		int iRow = 0, iCell = 0;
+		int iRow = 0, iCell = 0;	//для проверки на максимальную строку в STS
+		int iVLV_Logic = 0;			//индекс таблицы для записи LogicDI
+		int iVLV_OUT_TS = 0;		//Префикс _1-127
 		log.print("Заполняется таблица TS  CountTS=" + Integer.toString(getCountTS(plc)));
 		//Таблица TS
 		sheet = book.getSheet("TS");
@@ -355,7 +358,11 @@ public class CreateConfig {
 			    if ((i>=cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI)) && 
 			    		((i<cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
 			    				+ plc.ListValves.size()*cntTSinValve))) {
-			    	text.setCellValue(ConstNamesLogicTS[4]);
+			    	
+//			    	text.setCellValue(ConstNamesLogicTS[4] + "," );
+			    	text.setCellValue(getNameValveTS(plc, cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI), i));
+			    	
+			    	
 			    }
 			    
 			    
@@ -396,27 +403,36 @@ public class CreateConfig {
 	}	
 	
 	
-	
+	/**
+	 * Получение String из текущей позиции записи в TS
+	 * @param plc
+	 * @param iStartinTS
+	 * @param iCur
+	 * @return
+	 */
+	public static String getNameValveTS (PLC_Motorola plc, int iStartinTS, int iCur) {
+		String str = null;
+		int cntLogicValve = 4;		//кол-во логических TS задвижки LogicDI
+		int param1= 0, param2 = 0;
+		int k = iCur - iStartinTS;
+		int curZDV  =k / cntTSinValve;
+		if (k>143)	k = k - (curZDV)*72;
+				
+		if (((k>=0) && (k<cntLogicValve)) /*|| ((k>=64) && (k<=64+cntLogicValve))*/) {
+			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k);
+			System.out.println(curZDV);
+			System.out.println(str);
+		}
+		else if ((k>=cntTSinValve) && (k<cntTSinValve+cntLogicValve)) {
+			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k-72);
+			System.out.println(curZDV);
+			System.out.println(str);
+		}
+		
+ 		return str ;
+	}
 
 }//*******end class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
