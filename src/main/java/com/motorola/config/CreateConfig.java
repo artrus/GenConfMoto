@@ -16,6 +16,13 @@ public class CreateConfig {
 	 
 	private static int cntLogicStartBit = 32;
 	private static int cntTSinValve = 72;
+	private static int cntAllTableTS = 5*248;
+	//Стартовый блок TS
+	private static String[] namesStartLogicTS = {"MainFail", "BatFal", "ClockValid", "ErrLog", 
+											"I/O_Fl", "fFalse", "fFalse", "control_fault"};
+	//Имена всяких переменных
+	private static String[] ConstNamesLogicTS = {"fFALSE", "fTRUE", "ModFail", "di", 
+												"VLV_LogicDI", "VLV_OUT_TS", "AND_ORResult", "rez"};
 	
 	public static void newConfig(File file, PLC_Motorola plc) throws FileNotFoundException, IOException {
 		
@@ -31,11 +38,12 @@ public class CreateConfig {
 		book.createSheet("bi link");
 		book.createSheet("AO link");
 		book.createSheet("ModFail link");
-				 		 
+		book.createSheet("TS");
+		
 		generateACETable(plc, book, log);
 		generateOneTable(plc, book, log); 
 		generateIOlinks(plc, book, log);
-		 
+		generateTStable(plc, book, log);
 		 
 		 
 		 //закрытие лога
@@ -46,6 +54,7 @@ public class CreateConfig {
 	     book.close();
 		 
 	}
+	
 	 /**
 	  * Генерирование ACE таблицы в Excel
 	  * Основные параметры проекта
@@ -182,7 +191,7 @@ public class CreateConfig {
 	 * @throws IOException 
 	  */
 
-	private static void generateIOlinks (PLC_Motorola plc, Workbook book, PrintWriter log) throws IOException {
+	private static void generateIOlinks (PLC_Motorola plc, Workbook book, PrintWriter log)  {
 		
 		Sheet sheet;
 		Row row;
@@ -303,6 +312,77 @@ public class CreateConfig {
 
 	}
 
+	/**
+	 * Заполнение таблицы TS
+	 * @param plc
+	 * @param book
+	 * @param log
+	 */
+	
+	private static void generateTStable (PLC_Motorola plc, Workbook book, PrintWriter log)  {
+		
+		Sheet sheet;
+		Row row;
+		Cell text;
+		int LastIndexTables = 248;   //максимальный размер таблицы в STS
+		int iRow = 0, iCell = 0;
+		log.print("Заполняется таблица TS  CountTS=" + Integer.toString(getCountTS(plc)));
+		//Таблица TS
+		sheet = book.getSheet("TS");
+		try {
+			//Создание необходимых строк
+			for (int i = 0; i<LastIndexTables+1; i++)	sheet.createRow(i);
+			//Цикл со всеми TS
+			for(int i =0; i<cntAllTableTS/*getCountTS(plc)*/ ; i++){		
+				row = sheet.getRow(iCell); 
+			    text = row.createCell(iRow); 
+			    
+			    //Копирование первых константых 8 TS
+			    if (i<8) text.setCellValue(namesStartLogicTS[i]); 
+			    //ModFail,x
+			    if ((i>=8) && (i<plc.ListIOModules.size()+8)) {
+			    	text.setCellValue(ConstNamesLogicTS[2] + "," + Integer.toString(plc.ListIOModules.get(i-8).getPosition()) );
+			    }
+			    //все fFalse до 32го TS 
+			    if ((i>plc.ListIOModules.size()-1+8 ) && (i<cntLogicStartBit)){
+			    	text.setCellValue(ConstNamesLogicTS[0]);
+			    }
+			    //заполнение di
+			    if ((i>=cntLogicStartBit) && (i<cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI))) {
+			    	text.setCellValue(ConstNamesLogicTS[3] + "," + Integer.toString(i-cntLogicStartBit) );
+			    }
+			    //заполнение задвижек
+			    if ((i>=cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI)) && 
+			    		((i<cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
+			    				+ plc.ListValves.size()*cntTSinValve))) {
+			    	text.setCellValue(ConstNamesLogicTS[4]);
+			    }
+			    
+			    
+			    //остальные fFalse...
+			    if ((i>=cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) +
+			    			plc.ListValves.size()*cntTSinValve)) {
+			    	text.setCellValue(ConstNamesLogicTS[0]);
+			    }
+			    
+			    
+			    iCell++;
+			    if (iCell==LastIndexTables) { //проверка на максимальное число строк в STS
+					iRow++;
+					iCell = 0;
+				}			    
+			}
+		
+		} catch (NullPointerException io) {
+			System.out.println(io);
+			
+		}
+		
+		for (int i=0; i<5; i++)	sheet.autoSizeColumn(i);	//выравнивание
+		log.print("  --> окончено ");
+
+	}
+	
 	
 	/**
 	 * Подсчет countTS
