@@ -32,9 +32,6 @@ public class ReadSaveConfig {
 		ReadModulesInXML(file, plc, log);
 		ReadZDVInXML(file, plc, log);
 		
-		int i = plc.ListValves.size();
-		System.out.println(i);
-//		System.out.println( plc.ListValves.size() );
 		
 //		for (int i = 0; i < plc.LisValves.size(); i++) {
 //			

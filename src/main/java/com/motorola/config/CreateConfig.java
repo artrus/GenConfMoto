@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.MathContext;
-
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -46,7 +44,12 @@ public class CreateConfig {
 		generateIOlinks(plc, book, log);
 		generateTStable(plc, book, log);
 		 
-		 
+//		System.out.println(getNameValveTS(plc, 0, 216));
+//		System.out.println(getNameValveTS(plc, 0, 217));
+//		System.out.println(getNameValveTS(plc, 0, 218));
+//		System.out.println(getNameValveTS(plc, 0, 219));
+		
+//		System.out.println(getNameValveTS(plc, 0, 224));
 		 //закрытие лога
 		log.close();
 		fileoutputstream.close();
@@ -319,7 +322,6 @@ public class CreateConfig {
 	 * @param book
 	 * @param log
 	 */
-	
 	private static void generateTStable (PLC_Motorola plc, Workbook book, PrintWriter log)  {
 		
 		Sheet sheet;
@@ -327,8 +329,6 @@ public class CreateConfig {
 		Cell text;
 		int LastIndexTables = 248;   //максимальный размер таблицы в STS
 		int iRow = 0, iCell = 0;	//для проверки на максимальную строку в STS
-		int iVLV_Logic = 0;			//индекс таблицы для записи LogicDI
-		int iVLV_OUT_TS = 0;		//Префикс _1-127
 		log.print("Заполняется таблица TS  CountTS=" + Integer.toString(getCountTS(plc)));
 		//Таблица TS
 		sheet = book.getSheet("TS");
@@ -358,11 +358,7 @@ public class CreateConfig {
 			    if ((i>=cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI)) && 
 			    		((i<cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
 			    				+ plc.ListValves.size()*cntTSinValve))) {
-			    	
-//			    	text.setCellValue(ConstNamesLogicTS[4] + "," );
-			    	text.setCellValue(getNameValveTS(plc, cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI), i));
-			    	
-			    	
+			    	text.setCellValue(getNameValveTS(plc, cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI), i));	
 			    }
 			    
 			    
@@ -404,7 +400,7 @@ public class CreateConfig {
 	
 	
 	/**
-	 * Получение String из текущей позиции записи в TS
+	 * Получение String Valve из текущей позиции записи в TS
 	 * @param plc
 	 * @param iStartinTS
 	 * @param iCur
@@ -413,21 +409,39 @@ public class CreateConfig {
 	public static String getNameValveTS (PLC_Motorola plc, int iStartinTS, int iCur) {
 		String str = null;
 		int cntLogicValve = 4;		//кол-во логических TS задвижки LogicDI
-		int param1= 0, param2 = 0;
 		int k = iCur - iStartinTS;
-		int curZDV  =k / cntTSinValve;
-		if (k>143)	k = k - (curZDV)*72;
-				
+		int curZDV  =k / cntTSinValve;	//целая часть = Текущая задвижка
+		int param1  = 1;// = (1 + k / (cntTSinValve*2)) ;
+		
+		//if (k>143)	k = k - curZDV*72;	//если больше 143 то вычитаем текущий индекс для постоянств k = 0..143
+		
+
+		System.out.println(k);
+	
+		System.out.println(curZDV);
+		if ((curZDV==2) || (curZDV==4) || (curZDV==6) || (curZDV==8) || (curZDV==10) || (curZDV==12) || (curZDV==14)) {
+			k = k - curZDV*72;
+			System.out.print("k1 =");
+			System.out.println(k);	
+		} else if ((curZDV==3) || (curZDV==5) || (curZDV==7) || (curZDV==9) || (curZDV==11) || (curZDV==13) || (curZDV==15)) {
+			k = k - (curZDV-1)*72;
+			System.out.print("k2 =");
+			System.out.println(k);
+		}
+		
+
+		
 		if (((k>=0) && (k<cntLogicValve)) /*|| ((k>=64) && (k<=64+cntLogicValve))*/) {
 			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k);
-			System.out.println(curZDV);
-			System.out.println(str);
-		}
-		else if ((k>=cntTSinValve) && (k<cntTSinValve+cntLogicValve)) {
+		} else if ((k>=cntTSinValve) && (k<cntTSinValve+cntLogicValve)) {
 			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k-72);
-			System.out.println(curZDV);
-			System.out.println(str);
+		} else	if ((k>=8) && (k<cntTSinValve)) {
+			str = ConstNamesLogicTS[5] + Integer.toString(param1) + "_" + Integer.toString(param1+1) + "," + Integer.toString(k-8); 
+		} else if ((k>=8+cntTSinValve) && (k<cntTSinValve*2)) {
+			str = ConstNamesLogicTS[5] + Integer.toString(param1) + "_" + Integer.toString(param1+1) + "," + Integer.toString(k-16);
 		}
+			
+		
 		
  		return str ;
 	}
