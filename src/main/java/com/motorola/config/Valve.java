@@ -3,16 +3,15 @@ package com.motorola.config;
 public class Valve {
 
 	private boolean CSPA;
-	private int number;
-	private String manufactory;
+	private String number; 			//Номер задвижки №...а
+	private String manufactory;		//Производитель ЭПЦ ТЭК ЭЛЕСИ
 	public Valve() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	
-	public Valve(int number, String manufactory) {
-		// TODO Auto-generated constructor stub
-		this.number = number;
-		this.manufactory = manufactory;
+	public Valve(String number, String manufactory) {
+		this.setNumber(number);
+		this.setManufactory(manufactory);
 	}
 
 	public boolean isCSPA() {
@@ -21,6 +20,22 @@ public class Valve {
 
 	public void setCSPA(boolean cSPA) {
 		CSPA = cSPA;
+	}
+
+	public String getManufactory() {
+		return manufactory;
+	}
+
+	public void setManufactory(String manufactory) {
+		this.manufactory = manufactory;
+	}
+
+	public String getNumber() {
+		return number;
+	}
+
+	public void setNumber(String number) {
+		this.number = number;
 	}
 	
 

@@ -14,8 +14,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 public class CreateConfig {
 	 
-	
-	
+	private static int cntLogicStartBit = 32;
+	private static int cntTSinValve = 72;
 	
 	public static void newConfig(File file, PLC_Motorola plc) throws FileNotFoundException, IOException {
 		
@@ -82,8 +82,6 @@ public class CreateConfig {
 		}
 		log.println("--> окончено");
 	 }
-	
-	 
 	 
 	 /**
 	  * Генерирование первой таблицы в Excel
@@ -130,21 +128,52 @@ public class CreateConfig {
 		//Строка 5
 		row = sheet.createRow(5); 
 		text = row.createCell(0);
+		text.setCellValue("ModFail");
+		text = row.createCell(1);
+		text.setCellValue( plc.ListIOModules.size());
+		
+		//Строка 8 Таблица ApplParam
+		row = sheet.createRow(7); 
+		text = row.createCell(0);
+		text.setCellValue("Таблица ApplParam");
+		text = row.createCell(1);
+		text.setCellValue("Значение");
+		//Строка 9 AI_mdl_num
+		row = sheet.createRow(8); 
+		text = row.createCell(0);
 		text.setCellValue("AI_mdl_num");
 		text = row.createCell(1);
 		for (int i = 0; i<plc.ListIOModules.size(); i++) {
-			if (plc.ListIOModules.get(i).getName() == "AI") {
-				text.setCellValue(1 );
+			String str = plc.ListIOModules.get(i).getName();
+			if ( str.matches("AI")) {
+				text.setCellValue(i+1);
+//				System.out.println("Индекс AI модуля=" + Integer.toString(i+1)  );
 				break;
 			}
-				
 		}
-		 
+		
+		//Строка 10 CountTS
+		row = sheet.createRow(9); 
+		text = row.createCell(0);
+		text.setCellValue("CountTS");
+		text = row.createCell(1);				
+		text.setCellValue(getCountTS(plc));
+		
+		
+		//Строка 11 CmdRebootNum
+		row = sheet.createRow(10); 
+		text = row.createCell(0);
+		text.setCellValue("CmdRebootNum");
+		text = row.createCell(1);				
+		
+		
+		
 		sheet.autoSizeColumn(0);						
 		sheet.autoSizeColumn(1);
 		
 		log.println("--> окончено");
 	 }
+	 
 	 
 	 
 	 /**
@@ -273,6 +302,18 @@ public class CreateConfig {
 		log.println("Заполнились IO links");
 
 	}
+
+	
+	/**
+	 * Подсчет countTS
+	 * @param plc
+	 * @return
+	 */
+	public static int getCountTS(PLC_Motorola plc) { 
+		
+		return cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
+				+ cntTSinValve*plc.ListValves.size();
+	}	
 	
 	
 	
