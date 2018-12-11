@@ -1,7 +1,9 @@
 package com.motorola.config;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,10 +20,30 @@ public class ReadSaveConfig {
 	
 	enum XmlErr {NOERR, POSITIONERR, NOCORRECTMODULE};
 		
-	public static XmlErr ReadAllXML (File file, PLC_Motorola plc) {
+	public static XmlErr ReadAllXML (File file, PLC_Motorola plc) throws IOException {
 		
-		ReadKPinXML(file, plc);
-		ReadModulesInXML(file, plc);
+		FileOutputStream fileoutputstream = new FileOutputStream("f:/java-workspase/Outputs/MotoXMLLog.log") ;
+		PrintWriter log = new PrintWriter(fileoutputstream);
+		log.println("Лог ReadAllXML()");
+		
+		
+		
+		ReadKPinXML(file, plc, log);
+		ReadModulesInXML(file, plc, log);
+		ReadZDVInXML(file, plc, log);
+		
+		int i = plc.ListValves.size();
+		System.out.println(i);
+//		System.out.println( plc.ListValves.size() );
+		
+//		for (int i = 0; i < plc.LisValves.size(); i++) {
+//			
+//		}
+		
+		
+		
+		log.close();
+		fileoutputstream.close();
 		
 		return XmlErr.NOERR;
 	}
@@ -30,9 +52,10 @@ public class ReadSaveConfig {
 	/**
 	 * Чтение из файла xml номера и километра КП
 	*/
-	public static XmlErr ReadKPinXML (File file, PLC_Motorola plc) {
+	public static XmlErr ReadKPinXML (File file, PLC_Motorola plc, PrintWriter log) {
 		
 		Node root_kpnumkm = null;
+		log.print("Чтение КП начато");
 		try {
 			DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			// Создается дерево DOM документа из файла
@@ -72,7 +95,7 @@ public class ReadSaveConfig {
         } catch (IOException ex) {
             ex.printStackTrace(System.out);
         }
-		
+		log.println(" --> окончено");
 		return XmlErr.NOERR;
 	}
 	
@@ -81,11 +104,12 @@ public class ReadSaveConfig {
 	 * return List<IOModule>  список модулей
 	 * @return 
 	*/ 
-	public static XmlErr ReadModulesInXML (File file, PLC_Motorola plc) {
+	public static XmlErr ReadModulesInXML (File file, PLC_Motorola plc, PrintWriter log) {
 		
 		Node root_modules = null;
 		NodeList root_listmodules = null;
 		List<IOModule> ListIOModules = new LinkedList<IOModule>();
+		log.print("Чтение модулей начато");
 		try {
 			DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			// Создается дерево DOM документа из файла
@@ -143,10 +167,84 @@ public class ReadSaveConfig {
         }	
 		
 		plc.ListIOModules = ListIOModules;
+		
 //		проверка на одинаковую позицию модулей
 		if (CheakIOModules(plc.ListIOModules) == XmlErr.POSITIONERR) {
-			System.out.println("Err Position");   
+			log.println("Совпадение позиций модулей");   
 		}
+		
+		log.println("--> окончено");
+		return XmlErr.NOERR;
+		
+		
+	}
+	
+	
+	/**
+	 * Парсинг задвижек в XML
+	 * @param file
+	 * @param plc
+	 * @param log
+	 * @return
+	 */
+	
+	public static XmlErr ReadZDVInXML (File file, PLC_Motorola plc, PrintWriter log) {
+		
+		Node root_valves = null;
+		NodeList root_listvalves = null;
+		List<Valve> ListValves = new LinkedList<Valve>();
+		log.print("Чтение задвижек начато");
+		try {
+			DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			// Создается дерево DOM документа из файла
+        	Document document = documentBuilder.parse(file);
+
+        	// Получаем корневой элемент
+        	Node root = document.getDocumentElement();
+        	NodeList nodelist = root.getChildNodes();
+        
+        	root_valves = findNameNode(nodelist,0, "Valves");		//поиск узла c нуля Valves
+		        if (root_valves == null) {								
+		        	System.out.println("No Valves in xml file");
+		        }
+		        else {														//если узел найден
+		        	root_listvalves = root_valves.getChildNodes();			//вошли в Valves
+//		        	System.out.println(root_listvalves.getLength());
+		        	for (int i=0; i<root_listvalves.getLength(); i++){		//проход по всем модулям Valve	
+			        	Node node = root_listvalves.item(i);			        
+			        	Valve valve = new Valve( );							//Создаем новый объект модуля
+			        	if (node.getNodeType() != Node.TEXT_NODE ) {
+			        		NodeList listproperty = node.getChildNodes();	//Заход в Valve
+				        	for (int j=0; j <listproperty.getLength(); j++){
+				        		Node property = listproperty.item(j);		//Свойство
+				        		if (property.getNodeType() != Node.TEXT_NODE){
+//				        		System.out.println(property.getNodeName()+ "=" + property.getChildNodes().item(0).getTextContent());
+				        			//заполнение свойств модуля
+				        			if (property.getNodeName() == "CSPA"){
+				        				valve.setCSPA(Boolean.valueOf(property.getChildNodes().item(0).getTextContent() ));
+				        			}			        			
+				        				        		
+				        		}
+				        	
+				        	}
+				        	ListValves.add(valve);
+			        	}	
+			        	
+		        	}
+		        }
+		
+	        
+		} catch (ParserConfigurationException ex) {
+            ex.printStackTrace(System.out);
+        } catch (SAXException ex) {
+            ex.printStackTrace(System.out);
+        } catch (IOException ex) {
+            ex.printStackTrace(System.out);
+        }	
+		
+		plc.ListValves = ListValves;
+		
+		log.println("--> окончено");
 		return XmlErr.NOERR;
 		
 		

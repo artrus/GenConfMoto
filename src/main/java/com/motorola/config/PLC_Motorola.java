@@ -10,6 +10,7 @@ public class PLC_Motorola {
 	private int[] AllCntModules = {0,0,0,0};  	//Кол-во модулей DI,AI,DO,AO
 	
 	List<IOModule> ListIOModules;
+	List<Valve> ListValves;
 	private int kp;				//номер КП
 	private int km;				//Километр КП
 

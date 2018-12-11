@@ -23,6 +23,7 @@ public class CreateConfig {
 		PrintWriter log = new PrintWriter(fileoutputstream);
 		log.println("Лог newConfig()");
 		Workbook book = new HSSFWorkbook();
+		book.createSheet("ACE");
 		book.createSheet("Tables");
 		book.createSheet("DI link");
 		book.createSheet("AI link");
@@ -31,10 +32,9 @@ public class CreateConfig {
 		book.createSheet("AO link");
 		book.createSheet("ModFail link");
 				 		 
-		 
-		 generateOneTable(plc, book, log);
-		 
-		 generateIOlinks(plc, book, log);
+		generateACETable(plc, book, log);
+		generateOneTable(plc, book, log); 
+		generateIOlinks(plc, book, log);
 		 
 		 
 		 
@@ -46,6 +46,44 @@ public class CreateConfig {
 	     book.close();
 		 
 	}
+	 /**
+	  * Генерирование ACE таблицы в Excel
+	  * Основные параметры проекта
+	  * @param book
+	  */
+	 private static void generateACETable (PLC_Motorola plc, Workbook book, PrintWriter log) {
+		 
+		Sheet sheet;
+		log.print("Заполнение ACE таблицы начато");
+		sheet = book.getSheet("ACE");
+		Row row;
+		Cell text;
+		//Строка 0
+		row = sheet.createRow(0); 
+		text = row.createCell(0);
+		text.setCellValue("Состав корзины:");
+		
+		for (int i = 0; i<plc.ListIOModules.size(); i++) {
+		text = row.createCell(i+1);
+		text.setCellValue(plc.ListIOModules.get(i).getName() + " " + plc.ListIOModules.get(i).getCntInputs() 
+							+ "/" + plc.ListIOModules.get(i).getCntOutputs() );
+		
+		}
+		
+		{
+		sheet.autoSizeColumn(0);					
+		sheet.autoSizeColumn(1);
+		sheet.autoSizeColumn(2);
+		sheet.autoSizeColumn(3);
+		sheet.autoSizeColumn(4);
+		sheet.autoSizeColumn(5);
+		sheet.autoSizeColumn(6);
+		sheet.autoSizeColumn(7);
+		}
+		log.println("--> окончено");
+	 }
+	
+	 
 	 
 	 /**
 	  * Генерирование первой таблицы в Excel
@@ -89,13 +127,24 @@ public class CreateConfig {
 		text.setCellValue("LocalAO");
 		text = row.createCell(1);
 		text.setCellValue( plc.getAllCntIO(PLC_Motorola.TYPEMODULES.AO ) );
+		//Строка 5
+		row = sheet.createRow(5); 
+		text = row.createCell(0);
+		text.setCellValue("AI_mdl_num");
+		text = row.createCell(1);
+		for (int i = 0; i<plc.ListIOModules.size(); i++) {
+			if (plc.ListIOModules.get(i).getName() == "AI") {
+				text.setCellValue(1 );
+				break;
+			}
 				
+		}
+		 
+		sheet.autoSizeColumn(0);						
 		sheet.autoSizeColumn(1);
 		
 		log.println("--> окончено");
 	 }
-	 
-	 
 	 
 	 
 	 /**
@@ -103,7 +152,7 @@ public class CreateConfig {
 	  * @param book
 	 * @throws IOException 
 	  */
-//	@SuppressWarnings("unused")
+
 	private static void generateIOlinks (PLC_Motorola plc, Workbook book, PrintWriter log) throws IOException {
 		
 		Sheet sheet;
@@ -249,57 +298,5 @@ public class CreateConfig {
 
 
 
-
-
-/* Sheet sheet = book.getSheet("DI link");
-
-// Нумерация начинается с нуля
-   Row row = sheet.createRow(0); 
-   
-   // Мы запишем имя и дату в два столбца
-   // имя будет String, а дата рождения --- Date,
-   // формата dd.mm.yyyy
-   Cell name = row.createCell(0);
-   name.setCellValue("John");
-   
-   Cell birthdate = row.createCell(1);
-   
-   DataFormat format = book.createDataFormat();
-   CellStyle dateStyle = book.createCellStyle();
-   dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-   birthdate.setCellStyle(dateStyle);
-   
-
-   // Нумерация лет начинается с 1900-го
-   birthdate.setCellValue(new Date(110, 10, 10));
-   
-   // Меняем размер столбца
-   sheet.autoSizeColumn(1);
-   
-   
-   sheet = book.getSheet("AI link");
-   row = sheet.createRow(0); 
-   
-   // Мы запишем имя и дату в два столбца
-   // имя будет String, а дата рождения --- Date,
-   // формата dd.mm.yyyy
-   name = row.createCell(0);
-   name.setCellValue("John");
-   
-   birthdate = row.createCell(1);
-   
-   format = book.createDataFormat();
-   dateStyle = book.createCellStyle();
-   dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-   birthdate.setCellStyle(dateStyle);
-   
-
-   // Нумерация лет начинается с 1900-го
-   birthdate.setCellValue(new Date(110, 10, 10));
-   
-   // Меняем размер столбца
-   sheet.autoSizeColumn(1);
-   
-   */
 
 
