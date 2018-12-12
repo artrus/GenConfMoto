@@ -55,6 +55,7 @@ public class CreateConfig {
 		generateOneTable(plc, book, log); 
 		generateIOlinks(plc, book, log);
 		generateTStable(plc, book, log);
+		generateTimersZDV(plc, book, log);
 		 
 		 //закрытие лога
 		log.close();
@@ -408,10 +409,9 @@ public class CreateConfig {
 		}
 		
 		for (int i=0; i<5; i++)	sheet.autoSizeColumn(i);	//выравнивание
-		log.print("  --> окончено ");
+		log.println("  --> окончено ");
 
 	}
-	
 	
 	/**
 	 * Подсчет countTS
@@ -423,8 +423,7 @@ public class CreateConfig {
 		return cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
 				+ cntTSinValve*plc.ListValves.size();
 	}	
-	
-	
+		
 	/**
 	 * Получение String Valve из текущей позиции записи в TS
 	 * @param plc
@@ -475,6 +474,33 @@ public class CreateConfig {
 	 */
 	private static void generateTimersZDV (PLC_Motorola plc, Workbook book, PrintWriter log) {
 		
+		int[][] aTimersDefault = {	{30, 1, 100},
+									{100, 1, 600},
+									{9000, 100, 9000}, 
+									{50, 1, 100},
+									{150, 1, 9000},
+									{600, 1, 1200},
+									{0, 0, 0},
+									{0, 0, 0} };
+		log.print("Заполняются TimersZDV");
+		Sheet sheet = book.getSheet("TimersZDV");
+		Row row;
+		Cell text;
+		for (int i = 0, k = 0; i < plc.ListValves.size(); i++){
+			for (int j=0; j<8; j++, k++){
+				row = sheet.createRow(k);
+				text = row.createCell(1);
+				text.setCellValue(aTimersDefault[j][0]);
+				text = row.createCell(3);
+				text.setCellValue("43.0." + Integer.toString(k) + ".0");
+				text = row.createCell(4);
+				text.setCellValue(aTimersDefault[j][1]);
+				text = row.createCell(5);
+				text.setCellValue(Integer.toString(aTimersDefault[j][2]));
+			}
+			
+		}
+		log.print("  ---> окончено");
 	}
 }//*******end class
 

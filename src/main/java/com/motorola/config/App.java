@@ -18,13 +18,7 @@ public class App
         PLC_Motorola plc = new PLC_Motorola();
         ReadSaveConfig.ReadAllXML(fileKP, plc);
         
-        plc.CalcIOsignals(plc);//считаем сигналы
-        
-//        for (int i = 0; i < plc.ListIOModules.size(); i++)  {
-//        	System.out.println(plc.ListIOModules.get(i).getPosition() + " " + plc.ListIOModules.get(i).getName());
-//        }
-        
-        
+        plc.CalcIOsignals(plc);//считаем сигналы        
         
         File file = new File("f:/java-workspase/Outputs/MotoConfig.xls");
 		CreateConfig.newConfig(file, plc);
