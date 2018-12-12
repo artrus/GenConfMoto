@@ -12,10 +12,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 public class CreateConfig {
-	 
-	private static int cntLogicStartBit = 32;
-	private static int cntTSinValve = 72;
-	private static int cntAllTableTS = 5*248;
+	
+	private static int LastIndexTables = 248;   				//максимальный размер таблицы в STS
+	private static int cntLogicStartBit = 32;									//логических бит в начале
+	private static int cntTSinValve = 72;										//Логических ТС от задвижки
 	//Стартовый блок TS
 	private static String[] namesStartLogicTS = {"MainFail", "BatFal", "ClockValid", "ErrLog", 
 											"I/O_Fl", "fFalse", "fFalse", "control_fault"};
@@ -23,6 +23,14 @@ public class CreateConfig {
 	private static String[] ConstNamesLogicTS = {"fFALSE", "fTRUE", "ModFail", "di", 
 												"VLV_LogicDI", "VLV_OUT_TS", "AND_ORResult", "rez"};
 	
+	
+	/**
+	 * Создание конфигурации
+	 * @param file	Путь к фаилу
+	 * @param plc	Ссылка на PLC_Motorola
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	public static void newConfig(File file, PLC_Motorola plc) throws FileNotFoundException, IOException {
 		
 		FileOutputStream fileoutputstream = new FileOutputStream("f:/java-workspase/Outputs/MotoGenLog.log") ;
@@ -38,18 +46,14 @@ public class CreateConfig {
 		book.createSheet("AO link");
 		book.createSheet("ModFail link");
 		book.createSheet("TS");
+		book.createSheet("TimersZDV");
+
 		
 		generateACETable(plc, book, log);
 		generateOneTable(plc, book, log); 
 		generateIOlinks(plc, book, log);
 		generateTStable(plc, book, log);
 		 
-//		System.out.println(getNameValveTS(plc, 0, 216));
-//		System.out.println(getNameValveTS(plc, 0, 217));
-//		System.out.println(getNameValveTS(plc, 0, 218));
-//		System.out.println(getNameValveTS(plc, 0, 219));
-		
-//		System.out.println(getNameValveTS(plc, 0, 224));
 		 //закрытие лога
 		log.close();
 		fileoutputstream.close();
@@ -186,15 +190,12 @@ public class CreateConfig {
 		
 		log.println("--> окончено");
 	 }
-	 
-	 
-	 
+ 
 	 /**
 	  * Генерирование таблиц привязки
 	  * @param book
 	 * @throws IOException 
 	  */
-
 	private static void generateIOlinks (PLC_Motorola plc, Workbook book, PrintWriter log)  {
 		
 		Sheet sheet;
@@ -327,7 +328,7 @@ public class CreateConfig {
 		Sheet sheet;
 		Row row;
 		Cell text;
-		int LastIndexTables = 248;   //максимальный размер таблицы в STS
+		int cntAllTableTS = 5*LastIndexTables;		//Ячеек в TS
 		int iRow = 0, iCell = 0;	//для проверки на максимальную строку в STS
 		log.print("Заполняется таблица TS  CountTS=" + Integer.toString(getCountTS(plc)));
 		//Таблица TS
@@ -354,14 +355,12 @@ public class CreateConfig {
 			    if ((i>=cntLogicStartBit) && (i<cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI))) {
 			    	text.setCellValue(ConstNamesLogicTS[3] + "," + Integer.toString(i-cntLogicStartBit) );
 			    }
-			    //заполнение задвижек
+			    //заполнение задвижек getNameValveTS(plc, начальный индекс, текущий индекс)
 			    if ((i>=cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI)) && 
 			    		((i<cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
 			    				+ plc.ListValves.size()*cntTSinValve))) {
 			    	text.setCellValue(getNameValveTS(plc, cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI), i));	
 			    }
-			    
-			    
 			    //остальные fFalse...
 			    if ((i>=cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) +
 			    			plc.ListValves.size()*cntTSinValve)) {
@@ -371,10 +370,12 @@ public class CreateConfig {
 			    
 			    iCell++;
 			    if (iCell==LastIndexTables) { //проверка на максимальное число строк в STS
-					iRow++;
+					iRow++;						//переход на следующй столбец
 					iCell = 0;
 				}			    
 			}
+			
+			
 		
 		} catch (NullPointerException io) {
 			System.out.println(io);
@@ -413,28 +414,21 @@ public class CreateConfig {
 		int curZDV  =k / cntTSinValve;	//целая часть = Текущая задвижка
 		int param1  = 1;// = (1 + k / (cntTSinValve*2)) ;
 		
-		//if (k>143)	k = k - curZDV*72;	//если больше 143 то вычитаем текущий индекс для постоянств k = 0..143
-		
-
-		System.out.println(k);
-	
-		System.out.println(curZDV);
 		if ((curZDV==2) || (curZDV==4) || (curZDV==6) || (curZDV==8) || (curZDV==10) || (curZDV==12) || (curZDV==14)) {
-			k = k - curZDV*72;
-			System.out.print("k1 =");
-			System.out.println(k);	
+			k = k - curZDV*72;	
 		} else if ((curZDV==3) || (curZDV==5) || (curZDV==7) || (curZDV==9) || (curZDV==11) || (curZDV==13) || (curZDV==15)) {
 			k = k - (curZDV-1)*72;
-			System.out.print("k2 =");
-			System.out.println(k);
 		}
 		
-
-		
-		if (((k>=0) && (k<cntLogicValve)) /*|| ((k>=64) && (k<=64+cntLogicValve))*/) {
+		//в зависимости от индекса вставляем необходимые поля
+		if (((k>=0) && (k<cntLogicValve)) ) {
 			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k);
+		} else if ((k>=cntLogicValve) && (k<8)){
+			str = ConstNamesLogicTS[0];
 		} else if ((k>=cntTSinValve) && (k<cntTSinValve+cntLogicValve)) {
 			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k-72);
+		} else if ((k>=cntTSinValve+cntLogicValve) && (k<cntTSinValve+8)){
+			str = ConstNamesLogicTS[1];
 		} else	if ((k>=8) && (k<cntTSinValve)) {
 			str = ConstNamesLogicTS[5] + Integer.toString(param1) + "_" + Integer.toString(param1+1) + "," + Integer.toString(k-8); 
 		} else if ((k>=8+cntTSinValve) && (k<cntTSinValve*2)) {
@@ -446,6 +440,15 @@ public class CreateConfig {
  		return str ;
 	}
 
+	/**
+	 * Генерирование таблицы таймеров задвижек
+	 * @param plc
+	 * @param book
+	 * @param log
+	 */
+	private static void generateTimersZDV (PLC_Motorola plc, Workbook book, PrintWriter log) {
+		
+	}
 }//*******end class
 
 
