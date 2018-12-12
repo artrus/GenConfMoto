@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+
+import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -13,7 +15,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 public class CreateConfig {
 	
-	private static int LastIndexTables = 248;   				//максимальный размер таблицы в STS
+	private static int cntCellInTablesSTS = 248;   				//максимальный размер таблицы в STS
 	private static int cntLogicStartBit = 32;									//логических бит в начале
 	private static int cntTSinValve = 72;										//Логических ТС от задвижки
 	//Стартовый блок TS
@@ -328,14 +330,14 @@ public class CreateConfig {
 		Sheet sheet;
 		Row row;
 		Cell text;
-		int cntAllTableTS = 5*LastIndexTables;		//Ячеек в TS
+		int cntAllTableTS = 5*cntCellInTablesSTS;		//Ячеек в TS
 		int iRow = 0, iCell = 0;	//для проверки на максимальную строку в STS
 		log.print("Заполняется таблица TS  CountTS=" + Integer.toString(getCountTS(plc)));
 		//Таблица TS
 		sheet = book.getSheet("TS");
 		try {
 			//Создание необходимых строк
-			for (int i = 0; i<LastIndexTables+1; i++)	sheet.createRow(i);
+			for (int i = 0; i<cntCellInTablesSTS+1; i++)	sheet.createRow(i);
 			//Цикл со всеми TS
 			for(int i =0; i<cntAllTableTS/*getCountTS(plc)*/ ; i++){		
 				row = sheet.getRow(iCell); 
@@ -369,14 +371,37 @@ public class CreateConfig {
 			    
 			    
 			    iCell++;
-			    if (iCell==LastIndexTables) { //проверка на максимальное число строк в STS
+			    if (iCell==cntCellInTablesSTS) { //проверка на максимальное число строк в STS
 					iRow++;						//переход на следующй столбец
 					iCell = 0;
 				}			    
 			}
 			
+			String strDI = "DI";
+		    String str = null;
+			int j = 0, k;
+			int index=0;
+			//запись первых 4 статус качества fFALSE
+			for (int i = 0; i<4; i++) 	sheet.getRow(i).createCell(6).setCellValue(ConstNamesLogicTS[0]);
+			//запись качества для модулей
+			for (int i = 0; i<plc.ListIOModules.size() || i>240; i++ ){
+				if (strDI.matches(plc.ListIOModules.get(i).getName())) {
+					k = j + plc.ListIOModules.get(i).getCntInputs()/8;
+					index = k;
+					for ( j = k - plc.ListIOModules.get(i).getCntInputs()/8; j<k; j++ ){
+						row = sheet.getRow(index); 
+						text = row.createCell(6);
+						str = ConstNamesLogicTS[2] + "," 
+								+ Integer.toString((plc.ListIOModules.get(i).getPosition()));
+						text.setCellValue(str);
+						index++;
+					}
+				}
+			}
+			//запись остальных fFALSE
+			for (int i = index; i<cntCellInTablesSTS; i++) sheet.getRow(i).createCell(6).setCellValue(ConstNamesLogicTS[0]);
 			
-		
+					
 		} catch (NullPointerException io) {
 			System.out.println(io);
 			
@@ -412,12 +437,14 @@ public class CreateConfig {
 		int cntLogicValve = 4;		//кол-во логических TS задвижки LogicDI
 		int k = iCur - iStartinTS;
 		int curZDV  =k / cntTSinValve;	//целая часть = Текущая задвижка
-		int param1  = 1;// = (1 + k / (cntTSinValve*2)) ;
+		int param1 = 0;// = (1 + k / (cntTSinValve*2)) ;
 		
 		if ((curZDV==2) || (curZDV==4) || (curZDV==6) || (curZDV==8) || (curZDV==10) || (curZDV==12) || (curZDV==14)) {
 			k = k - curZDV*72;	
+			param1 = curZDV+1;
 		} else if ((curZDV==3) || (curZDV==5) || (curZDV==7) || (curZDV==9) || (curZDV==11) || (curZDV==13) || (curZDV==15)) {
 			k = k - (curZDV-1)*72;
+			param1 = curZDV;
 		}
 		
 		//в зависимости от индекса вставляем необходимые поля
@@ -428,7 +455,7 @@ public class CreateConfig {
 		} else if ((k>=cntTSinValve) && (k<cntTSinValve+cntLogicValve)) {
 			str = ConstNamesLogicTS[4] + "," + Integer.toString(10*curZDV+curZDV+k-72);
 		} else if ((k>=cntTSinValve+cntLogicValve) && (k<cntTSinValve+8)){
-			str = ConstNamesLogicTS[1];
+			str = ConstNamesLogicTS[0];
 		} else	if ((k>=8) && (k<cntTSinValve)) {
 			str = ConstNamesLogicTS[5] + Integer.toString(param1) + "_" + Integer.toString(param1+1) + "," + Integer.toString(k-8); 
 		} else if ((k>=8+cntTSinValve) && (k<cntTSinValve*2)) {
