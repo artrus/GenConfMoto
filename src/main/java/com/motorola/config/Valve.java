@@ -5,6 +5,7 @@ public class Valve {
 	private boolean CSPA;
 	private String number; 			//Номер задвижки №...а
 	private String manufactory;		//Производитель ЭПЦ ТЭК ЭЛЕСИ
+				
 	public Valve() {
 		
 	}

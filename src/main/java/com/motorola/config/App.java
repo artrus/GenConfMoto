@@ -20,10 +20,13 @@ public class App
         
         plc.CalcIOsignals(plc);//считаем сигналы        
         
-        File file = new File("f:/java-workspase/Outputs/MotoConfig.xls");
-		CreateConfig.newConfig(file, plc);
-		System.out.println("Stop!");
+        File fileTable = new File("f:/java-workspase/Outputs/MotoConfig.xls");
+		CreateConfigSTS.newConfig(fileTable, plc);
 		
+		
+		File fileValve = new File("f:/java-workspase/Outputs/Valve.250");
+		CreateValveINI.CreateConfValveINI(fileValve, plc);
+		System.out.println("Stop!");
        // ScreenMain.startScreen();
         
     }  

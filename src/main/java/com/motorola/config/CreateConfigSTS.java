@@ -6,14 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-public class CreateConfig {
+public class CreateConfigSTS {
 	
 	private static int cntCellInTablesSTS = 248;   				//максимальный размер таблицы в STS
 	private static int cntLogicStartBit = 32;									//логических бит в начале
@@ -71,7 +70,7 @@ public class CreateConfig {
 	  * Основные параметры проекта
 	  * @param book
 	  */
-	 private static void generateACETable (PLC_Motorola plc, Workbook book, PrintWriter log) {
+	private static void generateACETable (PLC_Motorola plc, Workbook book, PrintWriter log) {
 		 
 		Sheet sheet;
 		log.print("Заполнение ACE таблицы начато");
@@ -108,7 +107,7 @@ public class CreateConfig {
 	  * Расчет кол - ва строк в таблицах и основных параметров проекта
 	  * @param book
 	  */
-	 private static void generateOneTable (PLC_Motorola plc, Workbook book, PrintWriter log) {
+	private static void generateOneTable (PLC_Motorola plc, Workbook book, PrintWriter log) {
 		 
 		Sheet sheet;
 		log.print("Заполнение 1 таблицы начато");
@@ -418,7 +417,7 @@ public class CreateConfig {
 	 * @param plc
 	 * @return
 	 */
-	public static int getCountTS(PLC_Motorola plc) { 
+	private static int getCountTS(PLC_Motorola plc) { 
 		
 		return cntLogicStartBit + plc.getAllCntIO(PLC_Motorola.TYPEMODULES.DI) 
 				+ cntTSinValve*plc.ListValves.size();
@@ -431,7 +430,7 @@ public class CreateConfig {
 	 * @param iCur
 	 * @return
 	 */
-	public static String getNameValveTS (PLC_Motorola plc, int iStartinTS, int iCur) {
+	private static String getNameValveTS (PLC_Motorola plc, int iStartinTS, int iCur) {
 		String str = null;
 		int cntLogicValve = 4;		//кол-во логических TS задвижки LogicDI
 		int k = iCur - iStartinTS;

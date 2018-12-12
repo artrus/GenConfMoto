@@ -19,24 +19,23 @@ import org.xml.sax.SAXException;
 public class ReadSaveConfig {
 	
 	enum XmlErr {NOERR, POSITIONERR, NOCORRECTMODULE};
-		
+	
+	/**
+	 * Парсинг всего XML	
+	 * @param file
+	 * @param plc
+	 * @return
+	 * @throws IOException
+	 */
 	public static XmlErr ReadAllXML (File file, PLC_Motorola plc) throws IOException {
 		
 		FileOutputStream fileoutputstream = new FileOutputStream("f:/java-workspase/Outputs/MotoXMLLog.log") ;
 		PrintWriter log = new PrintWriter(fileoutputstream);
 		log.println("Лог ReadAllXML()");
 		
-		
-		
 		ReadKPinXML(file, plc, log);
 		ReadModulesInXML(file, plc, log);
 		ReadZDVInXML(file, plc, log);
-		
-		
-//		for (int i = 0; i < plc.LisValves.size(); i++) {
-//			
-//		}
-		
 		
 		
 		log.close();
@@ -45,11 +44,10 @@ public class ReadSaveConfig {
 		return XmlErr.NOERR;
 	}
 	
-	
 	/**
 	 * Чтение из файла xml номера и километра КП
 	*/
-	public static XmlErr ReadKPinXML (File file, PLC_Motorola plc, PrintWriter log) {
+	private static XmlErr ReadKPinXML (File file, PLC_Motorola plc, PrintWriter log) {
 		
 		Node root_kpnumkm = null;
 		log.print("Чтение КП начато");
@@ -101,7 +99,7 @@ public class ReadSaveConfig {
 	 * return List<IOModule>  список модулей
 	 * @return 
 	*/ 
-	public static XmlErr ReadModulesInXML (File file, PLC_Motorola plc, PrintWriter log) {
+	private static XmlErr ReadModulesInXML (File file, PLC_Motorola plc, PrintWriter log) {
 		
 		Node root_modules = null;
 		NodeList root_listmodules = null;
@@ -175,17 +173,15 @@ public class ReadSaveConfig {
 		
 		
 	}
-	
-	
+		
 	/**
 	 * Парсинг задвижек в XML
 	 * @param file
 	 * @param plc
 	 * @param log
 	 * @return
-	 */
-	
-	public static XmlErr ReadZDVInXML (File file, PLC_Motorola plc, PrintWriter log) {
+	 */	
+	private static XmlErr ReadZDVInXML (File file, PLC_Motorola plc, PrintWriter log) {
 		
 		Node root_valves = null;
 		NodeList root_listvalves = null;
@@ -252,7 +248,7 @@ public class ReadSaveConfig {
 	 * @param ListIOModules
 	 * @return err enum XmlErr
 	 */
-	public static XmlErr CheakIOModules (List<IOModule> ListIOModules){
+	private static XmlErr CheakIOModules (List<IOModule> ListIOModules){
 		
 		int c;
 		int cnt = 0;
@@ -275,7 +271,6 @@ public class ReadSaveConfig {
 		
 	}
 
-	
 	/**
 	 * Find in NodeList - Node with next name
 	 * @param nodelist 
@@ -283,7 +278,7 @@ public class ReadSaveConfig {
 	 * @param name
 	 * @return Node
 	 */
-	public static Node findNameNode (NodeList nodelist, int StartIndex, String name ) {
+	private static Node findNameNode (NodeList nodelist, int StartIndex, String name ) {
 		for (int i=0; i< nodelist.getLength(); i++ ) {
 	     	Node tag = nodelist.item(i);
 	       	if (tag.getNodeName() == name){
@@ -292,6 +287,5 @@ public class ReadSaveConfig {
 	    }
 		return null;
 	}
-	
-	
-}
+
+}//*****************************************************************************************************************
